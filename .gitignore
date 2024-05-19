@@ -24,5 +24,10 @@ hs_err_pid*
 replay_pid*
 
 local.properties
+gradle.properties
 .gradle/
+build/
+*.DS_Store
+.idea/
+
 
