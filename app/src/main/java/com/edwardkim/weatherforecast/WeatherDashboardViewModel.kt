@@ -2,7 +2,8 @@ package com.edwardkim.weatherforecast
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.edwardkim.weatherforecast.data.WeatherService
+import com.edwardkim.weatherforecast.data.LocationRepository
+import com.edwardkim.weatherforecast.data.WeatherRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -12,7 +13,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class WeatherDashboardViewModel @Inject constructor(
-    private val weatherService: WeatherService
+    private val weatherRepository: WeatherRepository,
+    private val locationRepository: LocationRepository
 ): ViewModel() {
     private val _currentTemperature = MutableStateFlow(0.0)
     val currentTemperature = _currentTemperature.asStateFlow()
@@ -25,16 +27,21 @@ class WeatherDashboardViewModel @Inject constructor(
 
     fun updateWeather() {
         viewModelScope.launch {
-            val result = weatherService.getWeather(41.878113, -87.629799, "imperial").body()
-            result?.run {
-                _currentTemperature.update {
-                    temperatureInfo.temperature
-                }
-                _currentWeatherDescription.update {
-                    weatherInfoItems[0].weatherDescription
-                }
-                _currentFeelsLikeTemperature.update {
-                    temperatureInfo.feelsLikeTemperature
+            val location = locationRepository.getLocation()
+            if (location == null) {
+                println("could not get location")
+            } else {
+                val result = weatherRepository.getWeather(location.latitude, location.longitude, "imperial").body()
+                result?.run {
+                    _currentTemperature.update {
+                        temperatureInfo.temperature
+                    }
+                    _currentWeatherDescription.update {
+                        weatherInfoItems[0].weatherDescription
+                    }
+                    _currentFeelsLikeTemperature.update {
+                        temperatureInfo.feelsLikeTemperature
+                    }
                 }
             }
         }
