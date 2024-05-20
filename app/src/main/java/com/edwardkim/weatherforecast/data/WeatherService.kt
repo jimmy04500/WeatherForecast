@@ -11,20 +11,26 @@ interface WeatherService {
     suspend fun getWeather(
         @Query("lat") lat: Double,
         @Query("lon") lon: Double,
+        @Query("units") unit: String,
         @Query("appid") apiKey: String = BuildConfig.API_KEY
     ): Response<WeatherResponse>
 }
 
 data class WeatherResponse(
     @SerializedName("main")
-    val temperatureInfo: TemperatureInfo
+    val temperatureInfo: TemperatureInfo,
+    @SerializedName("weather")
+    val weatherInfoItems: List<WeatherInfoItem>
+)
+
+data class WeatherInfoItem(
+    @SerializedName("description")
+    val weatherDescription: String
 )
 
 data class TemperatureInfo(
     @SerializedName("temp")
     val temperature: Double,
-    @SerializedName("temp_min")
-    val minTemperature: Double,
-    @SerializedName("temp_max")
-    val maxTemperature: Double,
+    @SerializedName("feels_like")
+    val feelsLikeTemperature: Double
 )
