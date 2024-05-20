@@ -1,4 +1,4 @@
-package com.edwardkim.weatherforecast.data.weatherservice
+package com.edwardkim.weatherforecast.data
 
 import com.edwardkim.weatherforecast.BuildConfig
 import com.google.gson.annotations.SerializedName
