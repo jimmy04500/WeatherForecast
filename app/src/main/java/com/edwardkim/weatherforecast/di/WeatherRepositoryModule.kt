@@ -1,6 +1,6 @@
 package com.edwardkim.weatherforecast.di
 
-import com.edwardkim.weatherforecast.data.WeatherService
+import com.edwardkim.weatherforecast.data.WeatherRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -10,13 +10,13 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 @Module
 @InstallIn(ViewModelComponent::class)
-object WeatherServiceModule {
+object WeatherRepositoryModule {
     @Provides
-    fun provideWeatherService(): WeatherService {
+    fun provideWeatherRepository(): WeatherRepository {
         return Retrofit.Builder()
             .baseUrl("https://api.openweathermap.org/data/2.5/")
             .addConverterFactory(GsonConverterFactory.create())
             .build()
-            .create(WeatherService::class.java)
+            .create(WeatherRepository::class.java)
     }
 }

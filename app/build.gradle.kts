@@ -78,4 +78,7 @@ dependencies {
 
     implementation(libs.hilt)
     kapt(libs.hilt.compiler)
+
+    implementation(libs.gms.playservices.location)
+    implementation("org.jetbrains.kotlinx", "kotlinx-coroutines-play-services", "1.8.1")
 }
