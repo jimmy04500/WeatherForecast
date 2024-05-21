@@ -45,7 +45,6 @@ fun CurrentWeatherSummary(
             Loading()
         }
         WeatherDashboardUiState.RequestLocationPermission -> {
-            println("ASDF compose Requesting location permission")
             LocationPermissionRequester(
                 onPermissionGranted = {
                     viewModel.onLocationPermissionGranted()

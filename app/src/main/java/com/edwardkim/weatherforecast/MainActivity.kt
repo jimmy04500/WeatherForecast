@@ -10,21 +10,14 @@ import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Icon
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.edwardkim.weatherforecast.ui.AppNavigationBar
 import com.edwardkim.weatherforecast.ui.CurrentWeatherSummary
+import com.edwardkim.weatherforecast.ui.NavigationBarItemInfo
 import com.edwardkim.weatherforecast.ui.SettingsScreen
 import com.edwardkim.weatherforecast.ui.theme.WeatherForecastTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -41,31 +34,26 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
                 Scaffold(
                     bottomBar = {
-                        val items = listOf(AppScreen.WeatherDashboard, AppScreen.Settings)
-                        var selectedItem by remember {
-                            mutableIntStateOf(0)
+                        val screens = listOf(AppScreen.WeatherDashboard, AppScreen.Settings)
+                        val items = screens.map {
+                            NavigationBarItemInfo(
+                                it.label,
+                                it.icon,
+                                it.label
+                            )
                         }
-                        NavigationBar{
-                            items.forEachIndexed { index, item ->
-                                NavigationBarItem(
-                                    selected = selectedItem == index,
-                                    onClick = {
-                                        selectedItem = index
-                                        navController.navigate(item.route) {
-//                                            popUpTo(navController.graph.startDestinationId) {
-//                                                saveState = true
-//                                            }
-//                                            launchSingleTop = true
-//                                            restoreState = true
-                                        }
-                                              },
-                                    label = { Text(item.name) },
-                                    icon = { Icon(
-                                        painter = painterResource(id = item.icon),
-                                        contentDescription = item.name
-                                    ) })
+                        AppNavigationBar(
+                            items = items,
+                            onItemClick = {
+                                navController.navigate(screens[it].route) {
+                                    popUpTo(navController.graph.startDestinationId) {
+                                        saveState = true
+                                    }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
                             }
-                        }
+                        )
                     },
                     modifier = Modifier.fillMaxSize()
                 ) { innerPadding ->
@@ -98,7 +86,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-sealed class AppScreen(val route: String, val name: String, @DrawableRes val icon: Int) {
+sealed class AppScreen(val route: String, val label: String, @DrawableRes val icon: Int) {
     object WeatherDashboard: AppScreen("weatherdashboard", "Dashboard", R.drawable.ic_home)
     object Settings: AppScreen("settings", "Settings", R.drawable.ic_settings)
 }
