@@ -16,34 +16,54 @@ class WeatherDashboardViewModel @Inject constructor(
     private val weatherRepository: WeatherRepository,
     private val locationRepository: LocationRepository
 ): ViewModel() {
-    private val _currentTemperature = MutableStateFlow(0.0)
-    val currentTemperature = _currentTemperature.asStateFlow()
+    private val _uiState = MutableStateFlow<WeatherDashboardUiState>(WeatherDashboardUiState.Loading)
+    val uiState = _uiState.asStateFlow()
 
-    private val _currentWeatherDescription = MutableStateFlow("")
-    val currentWeatherDescription = _currentWeatherDescription.asStateFlow()
+    fun onLocationPermissionGranted() {
+        updateWeather()
+    }
 
-    private val _currentFeelsLikeTemperature = MutableStateFlow(0.0)
-    val currentFeelsLikeTemperature = _currentFeelsLikeTemperature.asStateFlow()
+    fun onLocationPermissionDeniedPermanently() {
+        _uiState.update {
+            WeatherDashboardUiState.LocationPermissionDeniedPermanently
+        }
+    }
 
     fun updateWeather() {
         viewModelScope.launch {
+            // TODO cache / store location
+            _uiState.update {
+                WeatherDashboardUiState.Loading
+            }
             val location = locationRepository.getLocation()
             if (location == null) {
-                println("could not get location")
+                _uiState.update {
+                    WeatherDashboardUiState.RequestLocationPermission
+                }
             } else {
                 val result = weatherRepository.getWeather(location.latitude, location.longitude, "imperial").body()
                 result?.run {
-                    _currentTemperature.update {
-                        temperatureInfo.temperature
-                    }
-                    _currentWeatherDescription.update {
-                        weatherInfoItems[0].weatherDescription
-                    }
-                    _currentFeelsLikeTemperature.update {
-                        temperatureInfo.feelsLikeTemperature
+                    _uiState.update {
+                        WeatherDashboardUiState.Success(
+                            currentTemperature = temperatureInfo.temperature,
+                            currentWeatherDescription = weatherInfoItems[0].weatherDescription,
+                            currentFeelsLikeTemperature = temperatureInfo.feelsLikeTemperature
+                        )
                     }
                 }
             }
         }
     }
+}
+
+sealed interface WeatherDashboardUiState {
+    data object Loading: WeatherDashboardUiState
+    data object RequestLocationPermission: WeatherDashboardUiState
+    data object LocationPermissionDeniedPermanently: WeatherDashboardUiState
+    data object Error: WeatherDashboardUiState
+    data class Success(
+        val currentTemperature: Double,
+        val currentWeatherDescription: String,
+        val currentFeelsLikeTemperature: Double
+    ): WeatherDashboardUiState
 }
