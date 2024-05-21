@@ -35,21 +35,30 @@ class WeatherDashboardViewModel @Inject constructor(
             _uiState.update {
                 WeatherDashboardUiState.Loading
             }
-            val location = locationRepository.getLocation()
-            if (location == null) {
+
+            if (!locationRepository.hasLocationPermission()) {
                 _uiState.update {
                     WeatherDashboardUiState.RequestLocationPermission
                 }
-            } else {
-                val result = weatherRepository.getWeather(location.latitude, location.longitude, "imperial").body()
-                result?.run {
-                    _uiState.update {
-                        WeatherDashboardUiState.Success(
-                            currentTemperature = temperatureInfo.temperature,
-                            currentWeatherDescription = weatherInfoItems[0].weatherDescription,
-                            currentFeelsLikeTemperature = temperatureInfo.feelsLikeTemperature
-                        )
-                    }
+                return@launch
+            }
+
+            val location = locationRepository.getLocation()
+            if (location == null) {
+                _uiState.update {
+                    WeatherDashboardUiState.Error
+                }
+                return@launch
+            }
+
+            val result = weatherRepository.getWeather(location.latitude, location.longitude, "imperial").body()
+            result?.run {
+                _uiState.update {
+                    WeatherDashboardUiState.Success(
+                        currentTemperature = temperatureInfo.temperature,
+                        currentWeatherDescription = weatherInfoItems[0].weatherDescription,
+                        currentFeelsLikeTemperature = temperatureInfo.feelsLikeTemperature
+                    )
                 }
             }
         }

@@ -13,13 +13,19 @@ class LocationRepository @Inject constructor(
 ) {
     private val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
 
+    fun hasLocationPermission(): Boolean {
+        return ActivityCompat.checkSelfPermission(
+            context,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+    }
+
     suspend fun getLocation(): Location? {
         if (ActivityCompat.checkSelfPermission(
                 context,
                 Manifest.permission.ACCESS_COARSE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            return null
+            ) != PackageManager.PERMISSION_GRANTED) {
+            throw SecurityException("Location permission not granted")
         }
 
         val location = fusedLocationClient.lastLocation.await()
