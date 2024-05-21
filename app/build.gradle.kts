@@ -78,7 +78,10 @@ dependencies {
 
     implementation(libs.hilt)
     kapt(libs.hilt.compiler)
+    implementation("androidx.hilt", "hilt-navigation-compose", "1.2.0")
 
     implementation(libs.gms.playservices.location)
     implementation("org.jetbrains.kotlinx", "kotlinx-coroutines-play-services", "1.8.1")
+    implementation("androidx.navigation", "navigation-compose", "2.7.7")
+    implementation("androidx.navigation", "navigation-ui-ktx", "2.7.7")
 }

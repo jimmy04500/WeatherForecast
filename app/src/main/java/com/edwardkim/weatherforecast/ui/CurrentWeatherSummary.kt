@@ -31,13 +31,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.edwardkim.weatherforecast.WeatherDashboardUiState
 import com.edwardkim.weatherforecast.WeatherDashboardViewModel
 
 @Composable
 fun CurrentWeatherSummary(
-    viewModel: WeatherDashboardViewModel = viewModel(),
+    viewModel: WeatherDashboardViewModel,
     modifier: Modifier = Modifier
 ) {
     val uiState = viewModel.uiState.collectAsStateWithLifecycle().value
@@ -46,6 +45,7 @@ fun CurrentWeatherSummary(
             Loading()
         }
         WeatherDashboardUiState.RequestLocationPermission -> {
+            println("ASDF compose Requesting location permission")
             LocationPermissionRequester(
                 onPermissionGranted = {
                     viewModel.onLocationPermissionGranted()
