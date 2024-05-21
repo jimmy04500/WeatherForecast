@@ -5,10 +5,12 @@ import androidx.lifecycle.viewModelScope
 import com.edwardkim.weatherforecast.data.LocationRepository
 import com.edwardkim.weatherforecast.data.WeatherRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
@@ -43,7 +45,9 @@ class WeatherDashboardViewModel @Inject constructor(
                 return@launch
             }
 
-            val location = locationRepository.getLocation()
+            val location = withContext(Dispatchers.IO) {
+                locationRepository.getLocation()
+            }
             if (location == null) {
                 _uiState.update {
                     WeatherDashboardUiState.Error
@@ -51,14 +55,24 @@ class WeatherDashboardViewModel @Inject constructor(
                 return@launch
             }
 
-            val result = weatherRepository.getWeather(location.latitude, location.longitude, "imperial").body()
-            result?.run {
+            val weather = withContext(Dispatchers.IO) {
+                weatherRepository.getWeather(location.latitude, location.longitude, "imperial")
+                    .body()
+            }
+            if (weather == null) {
                 _uiState.update {
-                    WeatherDashboardUiState.Success(
-                        currentTemperature = temperatureInfo.temperature,
-                        currentWeatherDescription = weatherInfoItems[0].weatherDescription,
-                        currentFeelsLikeTemperature = temperatureInfo.feelsLikeTemperature
-                    )
+                    WeatherDashboardUiState.Error
+                }
+                return@launch
+            } else {
+                weather.run {
+                    _uiState.update {
+                        WeatherDashboardUiState.Success(
+                            currentTemperature = temperatureInfo.temperature,
+                            currentWeatherDescription = weatherInfoItems[0].weatherDescription,
+                            currentFeelsLikeTemperature = temperatureInfo.feelsLikeTemperature
+                        )
+                    }
                 }
             }
         }
