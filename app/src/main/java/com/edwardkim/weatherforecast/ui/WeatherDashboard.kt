@@ -38,6 +38,7 @@ fun WeatherDashboard(
                 currentTemperature = uiState.currentTemperature,
                 currentWeatherDescription = uiState.currentWeatherDescription,
                 currentFeelsLikeTemperature = uiState.currentFeelsLikeTemperature,
+                weatherForecastItems = uiState.weatherForecastItems,
                 modifier = modifier
             )
         }
@@ -49,6 +50,7 @@ fun WeatherDashboard(
     currentTemperature: Double,
     currentWeatherDescription: String,
     currentFeelsLikeTemperature: Double,
+    weatherForecastItems: List<WeatherForecastItem>,
     modifier: Modifier = Modifier
 ) {
     Column {
@@ -60,11 +62,7 @@ fun WeatherDashboard(
             modifier = modifier
         )
         WeatherForecast(
-            myItems = listOf(
-                WeatherForecastItem("5PM", 20.0),
-                WeatherForecastItem("6PM", 20.0),
-                WeatherForecastItem("7PM", 20.0)
-            )
+            myItems = weatherForecastItems
         )
     }
 }
@@ -75,6 +73,11 @@ fun PreviewWeatherDashboard() {
     WeatherDashboard(
         currentTemperature = 20.0,
         currentWeatherDescription = "Sunny",
-        currentFeelsLikeTemperature = 20.0
+        currentFeelsLikeTemperature = 20.0,
+        weatherForecastItems = listOf(
+            WeatherForecastItem(1716390000, 20.0),
+            WeatherForecastItem(1716404400, 20.0),
+            WeatherForecastItem(1716462000, 20.0)
+        )
     )
 }
