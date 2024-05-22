@@ -16,9 +16,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.edwardkim.weatherforecast.ui.AppNavigationBar
-import com.edwardkim.weatherforecast.ui.CurrentWeatherSummary
 import com.edwardkim.weatherforecast.ui.NavigationBarItemInfo
 import com.edwardkim.weatherforecast.ui.SettingsScreen
+import com.edwardkim.weatherforecast.ui.WeatherDashboard
 import com.edwardkim.weatherforecast.ui.theme.WeatherForecastTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -62,12 +62,13 @@ class MainActivity : ComponentActivity() {
                         startDestination = AppScreen.WeatherDashboard.route,
                         enterTransition = { EnterTransition.None },
                         exitTransition = { ExitTransition.None },
-                        modifier = Modifier.padding(innerPadding)
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(innerPadding)
                     ) {
                         composable(AppScreen.WeatherDashboard.route) {
-                            CurrentWeatherSummary(
-                                viewModel = weatherDashboardVm,
-                                modifier = Modifier.padding(innerPadding)
+                            WeatherDashboard(
+                                viewModel = weatherDashboardVm
                             )
                         }
                         composable(AppScreen.Settings.route) {
