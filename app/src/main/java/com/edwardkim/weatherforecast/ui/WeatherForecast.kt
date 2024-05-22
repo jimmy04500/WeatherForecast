@@ -90,7 +90,6 @@ fun toDayOfWeekString(time: Long): String {
     return Instant
         .ofEpochSecond(time)
         .atZone(ZoneId.systemDefault())
-        .toLocalDate()
         .dayOfWeek
         .toString()
 }
