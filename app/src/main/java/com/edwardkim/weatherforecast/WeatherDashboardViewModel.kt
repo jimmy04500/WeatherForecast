@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.edwardkim.weatherforecast.data.LocationRepository
 import com.edwardkim.weatherforecast.data.WeatherRepository
-import com.edwardkim.weatherforecast.ui.WeatherForecastItem
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -13,7 +12,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import javax.inject.Inject
+import kotlin.math.roundToInt
 
 @HiltViewModel
 class WeatherDashboardViewModel @Inject constructor(
@@ -81,8 +84,9 @@ class WeatherDashboardViewModel @Inject constructor(
                         currentFeelsLikeTemperature = currentWeatherResponse.temperatureInfo.feelsLikeTemperature,
                         weatherForecastItems = forecastWeatherResponse.forecastInfoItems.map {
                             WeatherForecastItem(
-                                time = it.timestamp,
-                                temperature = it.temperatureInfo.temperature
+                                dayOfWeek = toDayOfWeekString(it.timestamp),
+                                time = toLocalHourString(it.timestamp),
+                                temperature = it.temperatureInfo.temperature.roundToInt().toString()
                             )
                         }
                     )
@@ -90,6 +94,22 @@ class WeatherDashboardViewModel @Inject constructor(
             }
         }
     }
+}
+
+fun toLocalHourString(time: Long): String {
+    return Instant
+        .ofEpochSecond(time)
+        .atZone(ZoneId.systemDefault())
+        .format(DateTimeFormatter.ofPattern("ha"))
+        .toString()
+}
+
+fun toDayOfWeekString(time: Long): String {
+    return Instant
+        .ofEpochSecond(time)
+        .atZone(ZoneId.systemDefault())
+        .dayOfWeek
+        .toString()
 }
 
 sealed interface WeatherDashboardUiState {
@@ -104,3 +124,9 @@ sealed interface WeatherDashboardUiState {
         val weatherForecastItems: List<WeatherForecastItem>
     ): WeatherDashboardUiState
 }
+
+data class WeatherForecastItem(
+    val dayOfWeek: String,
+    val time: String,
+    val temperature: String
+)

@@ -7,6 +7,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.edwardkim.weatherforecast.WeatherDashboardUiState
 import com.edwardkim.weatherforecast.WeatherDashboardViewModel
+import com.edwardkim.weatherforecast.WeatherForecastItem
 
 @Composable
 fun WeatherDashboard(
@@ -75,9 +76,10 @@ fun PreviewWeatherDashboard() {
         currentWeatherDescription = "Sunny",
         currentFeelsLikeTemperature = 20.0,
         weatherForecastItems = listOf(
-            WeatherForecastItem(1716390000, 20.0),
-            WeatherForecastItem(1716404400, 20.0),
-            WeatherForecastItem(1716462000, 20.0)
+            WeatherForecastItem("Monday", "5PM", "75"),
+            WeatherForecastItem("Monday", "11PM", "65"),
+            WeatherForecastItem("Tuesday", "1AM", "78"),
+            WeatherForecastItem("Wednesday", "12PM", "70")
         )
     )
 }
