@@ -30,45 +30,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.edwardkim.weatherforecast.WeatherDashboardUiState
-import com.edwardkim.weatherforecast.WeatherDashboardViewModel
 
-@Composable
-fun CurrentWeatherSummary(
-    viewModel: WeatherDashboardViewModel,
-    modifier: Modifier = Modifier
-) {
-    val uiState = viewModel.uiState.collectAsStateWithLifecycle().value
-    when (uiState) {
-        WeatherDashboardUiState.Loading -> {
-            Loading()
-        }
-        WeatherDashboardUiState.RequestLocationPermission -> {
-            LocationPermissionRequester(
-                onPermissionGranted = {
-                    viewModel.onLocationPermissionGranted()
-                },
-                onPermissionDeniedPermanently = {
-                    viewModel.onLocationPermissionDeniedPermanently()
-                }
-            )
-        }
-        WeatherDashboardUiState.LocationPermissionDeniedPermanently -> {
-            LocationPermissionDenied()
-        }
-        WeatherDashboardUiState.Error -> TODO()
-        is WeatherDashboardUiState.Success -> {
-            CurrentWeatherSummary(
-                city = "Chicago",
-                temperature = uiState.currentTemperature,
-                weatherDescription = uiState.currentWeatherDescription,
-                feelsLikeTemp = uiState.currentFeelsLikeTemperature,
-                modifier = modifier
-            )
-        }
-    }
-}
 
 @Composable
 fun Loading() {
@@ -191,7 +153,8 @@ fun CurrentWeatherSummary(
     modifier: Modifier = Modifier) {
     Column(modifier = modifier
         .fillMaxWidth()
-        .padding(16.dp)) {
+        .padding(16.dp)
+    ) {
         Text(
             text = city,
             style = MaterialTheme.typography.titleLarge,
