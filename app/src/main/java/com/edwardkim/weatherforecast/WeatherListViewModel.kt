@@ -47,14 +47,11 @@ class WeatherListViewModel @Inject constructor(
                 _searchListUiState.update { SearchLocationListUiState.NoResult }
                 return@launch
             }
-
             _searchListUiState.update {
                 SearchLocationListUiState.Success(
                     locations = location.map {
                         SearchLocationListItemInfo(
-                            name = "${it.name}, " +
-                                    (if (it.state == null) "" else "${it.state}, ") +
-                                    ", ${it.country}",
+                            name = toLocationString(it.name, it.state, it.country),
                             latitude = it.latitude,
                             longitude = it.longitude
                         )

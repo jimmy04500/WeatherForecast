@@ -35,40 +35,43 @@ class WeatherRepository @Inject constructor(
         return weatherNetwork.getLocations(query).body()
     }
 
-    suspend fun addLocation(lat: Double, lon: Double, name: LocationName?, weatherInfo: WeatherInfo?) {
+    suspend fun getWeather(lat: Double, lon: Double, name: LocationName? = null): WeatherInfo {
         val name = if (name != null) name else {
             val location = weatherNetwork.getLocations(lat, lon).body()
                 ?: throw Exception("Location not found")
             LocationName(location[0].name, toRegionString(location[0].state, location[0].country))
         }
-        val weatherInfo = if (weatherInfo != null) weatherInfo else {
-            val currentWeather = weatherNetwork.getCurrentWeather(lat, lon, "imperial")
-                .body()
-            val forecastWeather = weatherNetwork.get5Day3HourForecast(lat, lon, "imperial")
-                .body()
-            if (currentWeather == null || forecastWeather == null) {
-                throw Exception("Weather not found")
-            }
-            WeatherInfo(
-                lat = lat,
-                lon = lon,
-                name = name,
-                temperature = currentWeather.temperatureInfo.temperature,
-                weatherDescription = currentWeather.weatherInfoItems[0].weatherDescription,
-                feelsLikeTemp = currentWeather.temperatureInfo.feelsLikeTemperature,
-                forecast = forecastWeather.forecastInfoItems.map {
-                    WeatherForecastItem(
-                        time = it.timestamp,
-                        temperature = it.temperatureInfo.temperature
-                    )
-                }
-            )
+        // TODO change to async calls
+        val currentWeather = weatherNetwork.getCurrentWeather(lat, lon, "imperial")
+            .body()
+        val forecastWeather = weatherNetwork.get5Day3HourForecast(lat, lon, "imperial")
+            .body()
+        if (currentWeather == null || forecastWeather == null) {
+            throw Exception("Weather not found")
         }
+        return WeatherInfo(
+            lat = lat,
+            lon = lon,
+            name = name,
+            temperature = currentWeather.temperatureInfo.temperature,
+            weatherDescription = currentWeather.weatherInfoItems[0].weatherDescription,
+            feelsLikeTemp = currentWeather.temperatureInfo.feelsLikeTemperature,
+            forecast = forecastWeather.forecastInfoItems.map {
+                WeatherForecastItem(
+                    time = it.timestamp,
+                    temperature = it.temperatureInfo.temperature
+                )
+            }
+        )
+    }
+
+    suspend fun addLocation(lat: Double, lon: Double, name: LocationName? = null, weatherInfo: WeatherInfo? = null) {
+        val weatherInfo = weatherInfo ?: getWeather(lat, lon, name)
         val weatherData = WeatherData.newBuilder()
             .setLatitude(lat)
             .setLongitude(lon)
             // TODO change to include name and region
-            .setName(name.name)
+            .setName(weatherInfo.name.name)
             .setTemperature(weatherInfo.temperature)
             .setWeatherDescription(weatherInfo.weatherDescription)
             .setFeelsLikeTemp(weatherInfo.feelsLikeTemp)
