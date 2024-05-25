@@ -20,23 +20,35 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.edwardkim.weatherforecast.data.LocationRepository
 import com.edwardkim.weatherforecast.ui.AppNavigationBar
 import com.edwardkim.weatherforecast.ui.DashboardScreen
 import com.edwardkim.weatherforecast.ui.LocationsScreen
 import com.edwardkim.weatherforecast.ui.NavigationBarItemInfo
 import com.edwardkim.weatherforecast.ui.SettingsScreen
-import com.edwardkim.weatherforecast.ui.weatherdetail.SearchedWeatherDetail
 import com.edwardkim.weatherforecast.ui.theme.WeatherForecastTheme
+import com.edwardkim.weatherforecast.ui.weatherdetail.LocationPermissionDenied
+import com.edwardkim.weatherforecast.ui.weatherdetail.LocationPermissionRequester
+import com.edwardkim.weatherforecast.ui.weatherdetail.SearchedWeatherDetail
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    @Inject
+    lateinit var locationRepository: LocationRepository
+
     private val weatherDashboardVm: DashboardViewModel by viewModels()
     private val topLevelScreens = listOf(AppScreen.WeatherDashboard, AppScreen.WeatherList, AppScreen.Settings)
     private val topLevelScreenRoutes = topLevelScreens.map { it.route }
     private val topLevelScreenNavBarItems = topLevelScreens.map {
         NavigationBarItemInfo(it.label, it.icon, it.label)
     }
+
+    private val _uiState = MutableStateFlow<ActivityUiState>(ActivityUiState.Loading)
+    val uiState = _uiState.asStateFlow()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -64,10 +76,28 @@ class MainActivity : ComponentActivity() {
                         exitTransition = { fadeOut(animationSpec = tween(1)) },
                         modifier = Modifier.padding(innerPadding)
                     ) {
-                        composable(AppScreen.WeatherDashboard.route) {
-                            DashboardScreen(
-                                viewModel = weatherDashboardVm
+                        composable("LocationPermissionDenied") {
+                            LocationPermissionDenied()
+                        }
+                        composable("LocationPermissionRequest") {
+                            LocationPermissionRequester(
+                                onPermissionGranted = {
+                                    navController.popBackStack()
+                                    weatherDashboardVm.updateWeather()
+                                },
+                                onPermissionDeniedPermanently = {
+                                    navController.navigate("LocationPermissionDenied")
+                                }
                             )
+                        }
+                        composable(AppScreen.WeatherDashboard.route) {
+                            if (!locationRepository.hasLocationPermission()) {
+                                navController.navigate("LocationPermissionRequest")
+                            } else {
+                                DashboardScreen(
+                                    viewModel = weatherDashboardVm
+                                )
+                            }
                         }
                         composable(AppScreen.WeatherList.route) {
                             LocationsScreen(
@@ -119,4 +149,12 @@ sealed class AppScreen(val route: String, val label: String, @DrawableRes val ic
     data object WeatherDashboard: AppScreen("weatherdashboard", "Dashboard", R.drawable.ic_home)
     data object WeatherList: AppScreen("weatherlist", "Locations", R.drawable.ic_list)
     data object Settings: AppScreen("settings", "Settings", R.drawable.ic_settings)
+}
+
+sealed interface ActivityUiState {
+    data object Loading: ActivityUiState
+    data object RequestLocationPermission: ActivityUiState
+    data object LocationPermissionDeniedPermanently: ActivityUiState
+    data object Error: ActivityUiState
+    data object LocationPermissionGranted: ActivityUiState
 }

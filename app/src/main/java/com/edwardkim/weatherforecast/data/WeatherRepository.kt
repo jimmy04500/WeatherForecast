@@ -88,8 +88,6 @@ class WeatherRepository @Inject constructor(
                 .build()
         }
     }
-
-
 }
 
 data class LocationName(
