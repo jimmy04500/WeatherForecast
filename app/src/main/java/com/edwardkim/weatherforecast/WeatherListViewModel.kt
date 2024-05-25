@@ -1,6 +1,5 @@
 package com.edwardkim.weatherforecast
 
-import androidx.datastore.core.DataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.edwardkim.weatherforecast.data.WeatherRepository
@@ -18,19 +17,18 @@ import javax.inject.Inject
 
 @HiltViewModel
 class WeatherListViewModel @Inject constructor(
-    private val weatherRepository: WeatherRepository,
-    private val weatherDataStore: DataStore<SavedLocationsData>
+    private val weatherRepository: WeatherRepository
 ): ViewModel() {
     // Retrieve and display saved weather list from repository
     private val _searchListUiState = MutableStateFlow<SearchLocationListUiState>(SearchLocationListUiState.NoResult)
     val searchListUiState = _searchListUiState.asStateFlow()
 
-    val savedLocations = weatherDataStore.data.map { savedWeatherData ->
-        savedWeatherData.weatherDataList.map { weatherData ->
+    val savedLocations = weatherRepository.weatherData.map { savedWeatherData ->
+        savedWeatherData.map { weatherData ->
             SearchLocationListItemInfo(
-                name = weatherData.locationName,
-                latitude = weatherData.latitude,
-                longitude = weatherData.longitude
+                name = weatherData.name.name,
+                latitude = weatherData.lat,
+                longitude = weatherData.lon
             )
         }
     }
@@ -43,26 +41,25 @@ class WeatherListViewModel @Inject constructor(
     fun searchLocation(query: String) {
         viewModelScope.launch {
             val location = withContext(Dispatchers.IO) {
-                weatherRepository.getLocations(query).body()
+                weatherRepository.searchLocations(query)
             }
-            if (location != null) {
-                if (location.isEmpty()) {
-                    _searchListUiState.update { SearchLocationListUiState.NoResult }
-                    return@launch
-                }
-                _searchListUiState.update {
-                    SearchLocationListUiState.Success(
-                        locations = location.map {
-                            SearchLocationListItemInfo(
-                                name = "${it.name}, " +
-                                        (if (it.state == null) "" else "${it.state}, ") +
-                                        ", ${it.country}",
-                                latitude = it.latitude,
-                                longitude = it.longitude
-                            )
-                        }
-                    )
-                }
+            if (location.isNullOrEmpty()) {
+                _searchListUiState.update { SearchLocationListUiState.NoResult }
+                return@launch
+            }
+
+            _searchListUiState.update {
+                SearchLocationListUiState.Success(
+                    locations = location.map {
+                        SearchLocationListItemInfo(
+                            name = "${it.name}, " +
+                                    (if (it.state == null) "" else "${it.state}, ") +
+                                    ", ${it.country}",
+                            latitude = it.latitude,
+                            longitude = it.longitude
+                        )
+                    }
+                )
             }
         }
     }

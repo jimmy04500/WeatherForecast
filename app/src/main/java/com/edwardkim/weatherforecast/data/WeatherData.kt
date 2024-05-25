@@ -17,3 +17,13 @@ data class WeatherForecastItem(
     val time: Long,
     val temperature: Double
 )
+
+data class WeatherInfo(
+    val lat: Double,
+    val lon: Double,
+    val name: LocationName,
+    val temperature: Double,
+    val weatherDescription: String,
+    val feelsLikeTemp: Double,
+    val forecast: List<WeatherForecastItem>
+)

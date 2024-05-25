@@ -5,7 +5,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.edwardkim.weatherforecast.data.WeatherForecastItem
-import com.edwardkim.weatherforecast.data.WeatherRepository
+import com.edwardkim.weatherforecast.data.WeatherNetwork
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -18,7 +18,7 @@ import javax.inject.Inject
 @HiltViewModel
 class WeatherDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val weatherRepository: WeatherRepository,
+    private val weatherNetwork: WeatherNetwork,
     private val weatherDataStore: DataStore<SavedLocationsData>
 ): ViewModel() {
     private val latitude: Double = checkNotNull(savedStateHandle["lat"])
@@ -36,7 +36,7 @@ class WeatherDetailViewModel @Inject constructor(
         viewModelScope.launch {
             weatherDataStore.updateData { savedWeatherData ->
                 val weatherData = WeatherData.newBuilder()
-                    .setLocationName(locationName)
+                    .setName(locationName)
                     .setLatitude(latitude)
                     .setLongitude(longitude)
                     .build()
@@ -50,11 +50,11 @@ class WeatherDetailViewModel @Inject constructor(
     fun updateWeather() {
         viewModelScope.launch {
             val currentWeather = async(Dispatchers.IO) {
-                weatherRepository.getCurrentWeather(latitude, longitude, "imperial")
+                weatherNetwork.getCurrentWeather(latitude, longitude, "imperial")
                     .body()
             }
             val forecastWeather = async(Dispatchers.IO) {
-                weatherRepository.get5Day3HourForecast(latitude, longitude, "imperial")
+                weatherNetwork.get5Day3HourForecast(latitude, longitude, "imperial")
                     .body()
             }
 

@@ -1,93 +1,95 @@
 package com.edwardkim.weatherforecast.data
 
-import com.edwardkim.weatherforecast.BuildConfig
-import com.google.gson.annotations.SerializedName
-import retrofit2.Response
-import retrofit2.http.GET
-import retrofit2.http.Query
+import androidx.datastore.core.DataStore
+import com.edwardkim.weatherforecast.ForecastData
+import com.edwardkim.weatherforecast.SavedLocationsData
+import com.edwardkim.weatherforecast.WeatherData
+import com.edwardkim.weatherforecast.toRegionString
+import kotlinx.coroutines.flow.map
+import javax.inject.Inject
 
-interface WeatherRepository {
-    @GET("data/2.5/weather")
-    suspend fun getCurrentWeather(
-        @Query("lat") lat: Double,
-        @Query("lon") lon: Double,
-        @Query("units") unit: String,
-        @Query("appid") apiKey: String = BuildConfig.API_KEY
-    ): Response<CurrentWeatherResponse>
+class WeatherRepository @Inject constructor(
+    private val weatherNetwork: WeatherNetwork,
+    private val weatherDataStore: DataStore<SavedLocationsData>
+) {
+    val weatherData = weatherDataStore.data.map { savedWeatherData ->
+        savedWeatherData.weatherDataList.map { weatherData ->
+            WeatherInfo(
+                lat = weatherData.latitude,
+                lon = weatherData.longitude,
+                name = LocationName(weatherData.name, ""),
+                temperature = weatherData.temperature,
+                weatherDescription = weatherData.weatherDescription,
+                feelsLikeTemp = weatherData.feelsLikeTemp,
+                forecast = weatherData.forecastDataList.map { forecastData ->
+                    WeatherForecastItem(
+                        time = forecastData.time,
+                        temperature = forecastData.temperature
+                    )
+                }
+            )
+        }
+    }
 
-    @GET("data/2.5/forecast")
-    suspend fun get5Day3HourForecast(
-        @Query("lat") lat: Double,
-        @Query("lon") lon: Double,
-        @Query("units") unit: String,
-        @Query("appid") apiKey: String = BuildConfig.API_KEY
-    ): Response<ForecastResponse>
+    suspend fun searchLocations(query: String): List<LocationItem>? {
+        return weatherNetwork.getLocations(query).body()
+    }
 
-    @GET("geo/1.0/direct")
-    suspend fun getLocations(
-        @Query("q")
-        query: String,
-        @Query("limit")
-        limit: Int = 5,
-        @Query("appid")
-        apiKey: String = BuildConfig.API_KEY
-    ): Response<List<LocationItem>>
+    suspend fun addLocation(lat: Double, lon: Double, name: LocationName?, weatherInfo: WeatherInfo?) {
+        val name = if (name != null) name else {
+            val location = weatherNetwork.getLocations(lat, lon).body()
+                ?: throw Exception("Location not found")
+            LocationName(location[0].name, toRegionString(location[0].state, location[0].country))
+        }
+        val weatherInfo = if (weatherInfo != null) weatherInfo else {
+            val currentWeather = weatherNetwork.getCurrentWeather(lat, lon, "imperial")
+                .body()
+            val forecastWeather = weatherNetwork.get5Day3HourForecast(lat, lon, "imperial")
+                .body()
+            if (currentWeather == null || forecastWeather == null) {
+                throw Exception("Weather not found")
+            }
+            WeatherInfo(
+                lat = lat,
+                lon = lon,
+                name = name,
+                temperature = currentWeather.temperatureInfo.temperature,
+                weatherDescription = currentWeather.weatherInfoItems[0].weatherDescription,
+                feelsLikeTemp = currentWeather.temperatureInfo.feelsLikeTemperature,
+                forecast = forecastWeather.forecastInfoItems.map {
+                    WeatherForecastItem(
+                        time = it.timestamp,
+                        temperature = it.temperatureInfo.temperature
+                    )
+                }
+            )
+        }
+        val weatherData = WeatherData.newBuilder()
+            .setLatitude(lat)
+            .setLongitude(lon)
+            // TODO change to include name and region
+            .setName(name.name)
+            .setTemperature(weatherInfo.temperature)
+            .setWeatherDescription(weatherInfo.weatherDescription)
+            .setFeelsLikeTemp(weatherInfo.feelsLikeTemp)
+        weatherInfo.forecast.forEach {
+            val forecastData = ForecastData.newBuilder()
+                .setTemperature(it.temperature)
+                .setTime(it.time)
+                .build()
+            weatherData.addForecastData(forecastData)
+        }
+        weatherDataStore.updateData {
+            it.toBuilder()
+                .addWeatherData(weatherData)
+                .build()
+        }
+    }
 
-    @GET("geo/1.0/reverse")
-    suspend fun getLocations(
-        @Query("lat")
-        lat: Double,
-        @Query("lon")
-        lon: Double,
-        @Query("limit")
-        limit: Int = 1,
-        @Query("appid")
-        apiKey: String = BuildConfig.API_KEY
-    ): Response<List<LocationItem>>
+
 }
 
-data class CurrentWeatherResponse(
-    @SerializedName("main")
-    val temperatureInfo: TemperatureInfo,
-    @SerializedName("weather")
-    val weatherInfoItems: List<WeatherInfoItem>
-)
-
-data class WeatherInfoItem(
-    @SerializedName("description")
-    val weatherDescription: String
-)
-
-data class TemperatureInfo(
-    @SerializedName("temp")
-    val temperature: Double,
-    @SerializedName("feels_like")
-    val feelsLikeTemperature: Double
-)
-
-data class ForecastResponse(
-    @SerializedName("list")
-    val forecastInfoItems: List<ForecastInfoItem>
-)
-
-data class ForecastInfoItem(
-    @SerializedName("main")
-    val temperatureInfo: TemperatureInfo,
-    @SerializedName("weather")
-    val weatherInfoItems: List<WeatherInfoItem>,
-    @SerializedName("dt")
-    val timestamp: Long
-)
-
-data class LocationItem(
-    @SerializedName("lat")
-    val latitude: Double,
-    @SerializedName("lon")
-    val longitude: Double,
-    @SerializedName("name")
+data class LocationName(
     val name: String,
-    @SerializedName("state")
-    val state: String?,
-    @SerializedName("country")
-    val country: String
+    val region: String
 )

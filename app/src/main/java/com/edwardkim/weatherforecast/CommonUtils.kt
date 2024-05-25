@@ -25,3 +25,6 @@ fun toLocationString(name: String, state: String?, country: String): String =
 
 fun toLocationString(name: String, state: String?): String =
     "${name}, " + (if (state == null) "" else "$state, ")
+
+fun toRegionString(state: String?, country: String): String =
+    (if (state == null) "" else "$state, ") + country

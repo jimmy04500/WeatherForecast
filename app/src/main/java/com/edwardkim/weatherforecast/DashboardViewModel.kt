@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.edwardkim.weatherforecast.data.LocationRepository
 import com.edwardkim.weatherforecast.data.WeatherForecastItem
-import com.edwardkim.weatherforecast.data.WeatherRepository
+import com.edwardkim.weatherforecast.data.WeatherNetwork
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -17,7 +17,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
-    private val weatherRepository: WeatherRepository,
+    private val weatherNetwork: WeatherNetwork,
     private val locationRepository: LocationRepository
 ): ViewModel() {
     private val _uiState = MutableStateFlow<WeatherDashboardUiState>(WeatherDashboardUiState.Loading)
@@ -58,15 +58,15 @@ class DashboardViewModel @Inject constructor(
             }
 
             val currentWeather = async(Dispatchers.IO) {
-                weatherRepository.getCurrentWeather(location.latitude, location.longitude, "imperial")
+                weatherNetwork.getCurrentWeather(location.latitude, location.longitude, "imperial")
                     .body()
             }
             val forecastWeather = async(Dispatchers.IO) {
-                weatherRepository.get5Day3HourForecast(location.latitude, location.longitude, "imperial")
+                weatherNetwork.get5Day3HourForecast(location.latitude, location.longitude, "imperial")
                     .body()
             }
             val currentLocation = async(Dispatchers.IO) {
-                weatherRepository.getLocations(location.latitude, location.longitude)
+                weatherNetwork.getLocations(location.latitude, location.longitude)
                     .body()
             }
 
