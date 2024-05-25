@@ -7,8 +7,6 @@ import com.edwardkim.weatherforecast.DashboardViewModel
 import com.edwardkim.weatherforecast.WeatherDashboardUiState
 import com.edwardkim.weatherforecast.data.WeatherForecastItem
 import com.edwardkim.weatherforecast.ui.weatherdetail.Loading
-import com.edwardkim.weatherforecast.ui.weatherdetail.LocationPermissionDenied
-import com.edwardkim.weatherforecast.ui.weatherdetail.LocationPermissionRequester
 import com.edwardkim.weatherforecast.ui.weatherdetail.WeatherDetail
 
 @Composable
@@ -19,20 +17,6 @@ fun DashboardScreen(
     when (uiState) {
         WeatherDashboardUiState.Loading -> {
             Loading()
-        }
-        WeatherDashboardUiState.RequestLocationPermission -> {
-            // TODO move permission logic to Activity
-            LocationPermissionRequester(
-                onPermissionGranted = {
-                    viewModel.onLocationPermissionGranted()
-                },
-                onPermissionDeniedPermanently = {
-                    viewModel.onLocationPermissionDeniedPermanently()
-                }
-            )
-        }
-        WeatherDashboardUiState.LocationPermissionDeniedPermanently -> {
-            LocationPermissionDenied()
         }
         WeatherDashboardUiState.Error -> TODO()
         is WeatherDashboardUiState.Success -> {

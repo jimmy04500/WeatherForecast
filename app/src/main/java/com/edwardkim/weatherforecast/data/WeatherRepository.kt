@@ -66,10 +66,31 @@ class WeatherRepository @Inject constructor(
     }
 
     suspend fun addLocation(lat: Double, lon: Double, name: LocationName? = null, weatherInfo: WeatherInfo? = null) {
-        val weatherInfo = weatherInfo ?: getWeather(lat, lon, name)
-        val weatherData = WeatherData.newBuilder()
-            .setLatitude(lat)
-            .setLongitude(lon)
+        addWeatherInfo(weatherInfo ?: getWeather(lat, lon, name))
+    }
+
+    private suspend fun addWeatherInfo(weatherInfo: WeatherInfo) {
+        val weatherData = getWeatherData(weatherInfo)
+        weatherDataStore.updateData {
+            it.toBuilder()
+                .addWeatherData(weatherData)
+                .build()
+        }
+    }
+
+    private suspend fun updateWeatherInfo(weatherInfo: WeatherInfo, index: Int) {
+        val weatherData = getWeatherData(weatherInfo)
+        weatherDataStore.updateData {
+            it.toBuilder()
+                .setWeatherData(index, weatherData)
+                .build()
+        }
+    }
+
+    private fun getWeatherData(weatherInfo: WeatherInfo): WeatherData {
+        val weatherDataBuilder = WeatherData.newBuilder()
+            .setLatitude(weatherInfo.lat)
+            .setLongitude(weatherInfo.lon)
             // TODO change to include name and region
             .setName(weatherInfo.name.name)
             .setTemperature(weatherInfo.temperature)
@@ -80,12 +101,21 @@ class WeatherRepository @Inject constructor(
                 .setTemperature(it.temperature)
                 .setTime(it.time)
                 .build()
-            weatherData.addForecastData(forecastData)
+            weatherDataBuilder.addForecastData(forecastData)
         }
-        weatherDataStore.updateData {
-            it.toBuilder()
-                .addWeatherData(weatherData)
-                .build()
+        return weatherDataBuilder.build()
+    }
+
+    suspend fun updateWeather() {
+        weatherDataStore.data.collect {
+            it.weatherDataList.forEachIndexed { index, weatherData ->
+                val newWeather = getWeather(
+                    weatherData.latitude,
+                    weatherData.longitude,
+                    LocationName(weatherData.name, "")
+                )
+                updateWeatherInfo(newWeather, index)
+            }
         }
     }
 }

@@ -31,8 +31,6 @@ import com.edwardkim.weatherforecast.ui.weatherdetail.LocationPermissionDenied
 import com.edwardkim.weatherforecast.ui.weatherdetail.LocationPermissionRequester
 import com.edwardkim.weatherforecast.ui.weatherdetail.SearchedWeatherDetail
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -41,14 +39,11 @@ class MainActivity : ComponentActivity() {
     lateinit var locationRepository: LocationRepository
 
     private val weatherDashboardVm: DashboardViewModel by viewModels()
-    private val topLevelScreens = listOf(AppScreen.WeatherDashboard, AppScreen.WeatherList, AppScreen.Settings)
+    private val topLevelScreens = listOf(TopLevelScreen.WeatherDashboard, TopLevelScreen.WeatherList, TopLevelScreen.Settings)
     private val topLevelScreenRoutes = topLevelScreens.map { it.route }
     private val topLevelScreenNavBarItems = topLevelScreens.map {
         NavigationBarItemInfo(it.label, it.icon, it.label)
     }
-
-    private val _uiState = MutableStateFlow<ActivityUiState>(ActivityUiState.Loading)
-    val uiState = _uiState.asStateFlow()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -71,7 +66,7 @@ class MainActivity : ComponentActivity() {
                 ) { innerPadding ->
                     NavHost(
                         navController = navController,
-                        startDestination = AppScreen.WeatherDashboard.route,
+                        startDestination = TopLevelScreen.WeatherDashboard.route,
                         enterTransition = { fadeIn(animationSpec = tween(1)) },
                         exitTransition = { fadeOut(animationSpec = tween(1)) },
                         modifier = Modifier.padding(innerPadding)
@@ -90,7 +85,7 @@ class MainActivity : ComponentActivity() {
                                 }
                             )
                         }
-                        composable(AppScreen.WeatherDashboard.route) {
+                        composable(TopLevelScreen.WeatherDashboard.route) {
                             if (!locationRepository.hasLocationPermission()) {
                                 navController.navigate("LocationPermissionRequest")
                             } else {
@@ -99,7 +94,7 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
                         }
-                        composable(AppScreen.WeatherList.route) {
+                        composable(TopLevelScreen.WeatherList.route) {
                             LocationsScreen(
                                 onNavigateToWeatherDetail =
                                 { lat, lon, locationName ->
@@ -107,7 +102,7 @@ class MainActivity : ComponentActivity() {
                                 }
                             )
                         }
-                        composable(AppScreen.Settings.route) {
+                        composable(TopLevelScreen.Settings.route) {
                             SettingsScreen()
                         }
                         composable(
@@ -145,16 +140,8 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-sealed class AppScreen(val route: String, val label: String, @DrawableRes val icon: Int) {
-    data object WeatherDashboard: AppScreen("weatherdashboard", "Dashboard", R.drawable.ic_home)
-    data object WeatherList: AppScreen("weatherlist", "Locations", R.drawable.ic_list)
-    data object Settings: AppScreen("settings", "Settings", R.drawable.ic_settings)
-}
-
-sealed interface ActivityUiState {
-    data object Loading: ActivityUiState
-    data object RequestLocationPermission: ActivityUiState
-    data object LocationPermissionDeniedPermanently: ActivityUiState
-    data object Error: ActivityUiState
-    data object LocationPermissionGranted: ActivityUiState
+sealed class TopLevelScreen(val route: String, val label: String, @DrawableRes val icon: Int) {
+    data object WeatherDashboard: TopLevelScreen("weatherdashboard", "Dashboard", R.drawable.ic_home)
+    data object WeatherList: TopLevelScreen("weatherlist", "Locations", R.drawable.ic_list)
+    data object Settings: TopLevelScreen("settings", "Settings", R.drawable.ic_settings)
 }
