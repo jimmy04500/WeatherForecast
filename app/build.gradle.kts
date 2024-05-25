@@ -1,8 +1,15 @@
+import com.google.protobuf.gradle.*
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
     id("kotlin-kapt")
     id("com.google.dagger.hilt.android")
+    id("com.google.protobuf") version "0.9.4"
+}
+
+kapt {
+    correctErrorTypes = true
 }
 
 android {
@@ -53,6 +60,21 @@ android {
     }
 }
 
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:3.21.7"
+    }
+    generateProtoTasks {
+        all().forEach { task ->
+            task.builtins {
+                id("java") {
+                    option("lite")
+                }
+            }
+        }
+    }
+}
+
 dependencies {
 
     implementation(libs.androidx.core.ktx)
@@ -84,4 +106,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx", "kotlinx-coroutines-play-services", "1.8.1")
     implementation("androidx.navigation", "navigation-compose", "2.8.0-beta01")
     implementation("androidx.navigation", "navigation-ui-ktx", "2.8.0-beta01")
+
+    implementation("androidx.datastore", "datastore", "1.0.0")
+    implementation("com.google.protobuf", "protobuf-javalite", "3.24.1")
 }

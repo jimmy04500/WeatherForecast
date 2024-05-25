@@ -14,7 +14,7 @@ object WeatherRepositoryModule {
     @Provides
     fun provideWeatherRepository(): WeatherRepository {
         return Retrofit.Builder()
-            .baseUrl("https://api.openweathermap.org/data/2.5/")
+            .baseUrl("https://api.openweathermap.org/")
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(WeatherRepository::class.java)

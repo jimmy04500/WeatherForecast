@@ -10,7 +10,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.edwardkim.weatherforecast.R
@@ -18,20 +17,18 @@ import com.edwardkim.weatherforecast.R
 @Composable
 fun AppNavigationBar(
     items: List<NavigationBarItemInfo>,
-    onItemClick: (Int) -> Unit = {},
-    modifier: Modifier = Modifier
+    onNavigateToItem: (Int) -> Unit = {}
 ) {
-    var selectedItem by remember {
-        mutableIntStateOf(0)
-    }
-    NavigationBar(modifier = modifier) {
+    var selectedItem by remember { mutableIntStateOf(0) }
+    NavigationBar {
         items.forEachIndexed { index, item ->
             NavigationBarItem(
                 selected = selectedItem == index,
-                onClick =
-                {
-                    selectedItem = index
-                    onItemClick(index)
+                onClick = {
+                    if (selectedItem != index) {
+                        selectedItem = index
+                        onNavigateToItem(index)
+                    }
                 },
                 label = { Text(item.label) },
                 icon = {

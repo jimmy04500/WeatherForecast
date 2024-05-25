@@ -12,12 +12,12 @@ import androidx.compose.ui.text.style.TextAlign
 
 @Composable
 fun SettingsScreen(
-    modifier: Modifier = Modifier
 ) {
     Column(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.fillMaxSize()) {
+        modifier = Modifier
+            .fillMaxSize()) {
         Text(text = "Settings", style = MaterialTheme.typography.headlineMedium, textAlign = TextAlign.Center)
     }
 }

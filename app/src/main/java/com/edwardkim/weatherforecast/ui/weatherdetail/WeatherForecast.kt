@@ -1,4 +1,4 @@
-package com.edwardkim.weatherforecast.ui
+package com.edwardkim.weatherforecast.ui.weatherdetail
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -13,17 +13,25 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
+import com.edwardkim.weatherforecast.data.WeatherForecastItem
+import com.edwardkim.weatherforecast.toDayOfWeekString
+import com.edwardkim.weatherforecast.toLocalHourString
 import kotlin.math.roundToInt
 
 @Composable
-fun WeatherForecast(myItems: List<WeatherForecastItem>) {
+fun WeatherForecast(weatherForecastItems: List<WeatherForecastItem>) {
+    val dayOfWeekStrings = remember(weatherForecastItems) {
+        weatherForecastItems.map { toDayOfWeekString(it.time) }
+    }
+    val localHourStrings = remember(weatherForecastItems) {
+        weatherForecastItems.map { toLocalHourString(it.time) }
+    }
+
     Card(
         modifier = Modifier
             .padding(24.dp)
@@ -36,11 +44,10 @@ fun WeatherForecast(myItems: List<WeatherForecastItem>) {
         LazyColumn(
             modifier = Modifier.padding(24.dp)
         ) {
-            // TODO fix scroll lagging
-            val itemLength = myItems.size
-            itemsIndexed(myItems) { index, item ->
-                val dayOfWeek = toDayOfWeekString(item.time)
-                if (index == 0 || dayOfWeek != toDayOfWeekString(myItems[index-1].time)) {
+            val itemLength = weatherForecastItems.size
+            itemsIndexed(weatherForecastItems) { index, item ->
+                val dayOfWeek = dayOfWeekStrings[index]
+                if (index == 0 || dayOfWeek != dayOfWeekStrings[index-1]) {
                     Text(
                         text = dayOfWeek,
                         style = MaterialTheme.typography.titleMedium,
@@ -61,7 +68,7 @@ fun WeatherForecast(myItems: List<WeatherForecastItem>) {
                         .fillMaxWidth()
                 ) {
                     Text(
-                        text = toLocalHourString(item.time),
+                        text = localHourStrings[index],
                         style = MaterialTheme.typography.headlineSmall
                     )
                     Text(
@@ -77,28 +84,6 @@ fun WeatherForecast(myItems: List<WeatherForecastItem>) {
         }
     }
 }
-
-fun toLocalHourString(time: Long): String {
-    return Instant
-        .ofEpochSecond(time)
-        .atZone(ZoneId.systemDefault())
-        .format(DateTimeFormatter.ofPattern("ha"))
-        .toString()
-}
-
-fun toDayOfWeekString(time: Long): String {
-    return Instant
-        .ofEpochSecond(time)
-        .atZone(ZoneId.systemDefault())
-        .dayOfWeek
-        .toString()
-}
-
-data class WeatherForecastItem(
-    val time: Long,
-    val temperature: Double
-)
-
 
 @Preview(showBackground = true)
 @Composable

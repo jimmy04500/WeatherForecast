@@ -1,4 +1,4 @@
-package com.edwardkim.weatherforecast.ui
+package com.edwardkim.weatherforecast.ui.weatherdetail
 
 import android.Manifest
 import android.app.Activity
@@ -145,8 +145,8 @@ fun AllowLocationDialog(
 }
 
 @Composable
-fun CurrentWeatherSummary(
-    city: String,
+fun WeatherSummary(
+    locationName: String,
     temperature: Double,
     weatherDescription: String,
     feelsLikeTemp: Double,
@@ -156,7 +156,7 @@ fun CurrentWeatherSummary(
         .padding(16.dp)
     ) {
         Text(
-            text = city,
+            text = locationName,
             style = MaterialTheme.typography.titleLarge,
             textAlign = TextAlign.Center,
             modifier = Modifier.align(Alignment.CenterHorizontally)
@@ -188,8 +188,8 @@ fun CurrentWeatherSummary(
 @Preview(showBackground = true)
 @Composable
 fun PreviewCurrentWeatherSummary() {
-    CurrentWeatherSummary(
-        city = "San Francisco",
+    WeatherSummary(
+        locationName = "San Francisco",
         temperature = 72.0,
         weatherDescription = "Sunny",
         feelsLikeTemp = 80.0)

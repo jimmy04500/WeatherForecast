@@ -1,17 +1,19 @@
 package com.edwardkim.weatherforecast.ui
 
-import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.edwardkim.weatherforecast.DashboardViewModel
 import com.edwardkim.weatherforecast.WeatherDashboardUiState
-import com.edwardkim.weatherforecast.WeatherDashboardViewModel
+import com.edwardkim.weatherforecast.data.WeatherForecastItem
+import com.edwardkim.weatherforecast.ui.weatherdetail.Loading
+import com.edwardkim.weatherforecast.ui.weatherdetail.LocationPermissionDenied
+import com.edwardkim.weatherforecast.ui.weatherdetail.LocationPermissionRequester
+import com.edwardkim.weatherforecast.ui.weatherdetail.WeatherDetail
 
 @Composable
-fun WeatherDashboard(
-    viewModel: WeatherDashboardViewModel,
-    modifier: Modifier = Modifier
+fun DashboardScreen(
+    viewModel: DashboardViewModel
 ) {
     val uiState = viewModel.uiState.collectAsStateWithLifecycle().value
     when (uiState) {
@@ -34,46 +36,25 @@ fun WeatherDashboard(
         }
         WeatherDashboardUiState.Error -> TODO()
         is WeatherDashboardUiState.Success -> {
-            WeatherDashboard(
-                currentTemperature = uiState.currentTemperature,
-                currentWeatherDescription = uiState.currentWeatherDescription,
-                currentFeelsLikeTemperature = uiState.currentFeelsLikeTemperature,
-                weatherForecastItems = uiState.weatherForecastItems,
-                modifier = modifier
+            WeatherDetail(
+                locationName = uiState.locationName,
+                temperature = uiState.temperature,
+                weatherDescription = uiState.weatherDescription,
+                feelsLikeTemperature = uiState.feelsLikeTemperature,
+                weatherForecastItems = uiState.weatherForecastItems
             )
         }
-    }
-}
-
-@Composable
-fun WeatherDashboard(
-    currentTemperature: Double,
-    currentWeatherDescription: String,
-    currentFeelsLikeTemperature: Double,
-    weatherForecastItems: List<WeatherForecastItem>,
-    modifier: Modifier = Modifier
-) {
-    Column {
-        CurrentWeatherSummary(
-            city = "Chicago",
-            temperature = currentTemperature,
-            weatherDescription = currentWeatherDescription,
-            feelsLikeTemp = currentFeelsLikeTemperature,
-            modifier = modifier
-        )
-        WeatherForecast(
-            myItems = weatherForecastItems
-        )
     }
 }
 
 @Preview(showBackground = true)
 @Composable
 fun PreviewWeatherDashboard() {
-    WeatherDashboard(
-        currentTemperature = 20.0,
-        currentWeatherDescription = "Sunny",
-        currentFeelsLikeTemperature = 20.0,
+    WeatherDetail(
+        locationName = "London",
+        temperature = 20.0,
+        weatherDescription = "Sunny",
+        feelsLikeTemperature = 20.0,
         weatherForecastItems = listOf(
             WeatherForecastItem(1716390000, 20.0),
             WeatherForecastItem(1716404400, 20.0),

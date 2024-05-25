@@ -3,8 +3,8 @@ package com.edwardkim.weatherforecast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.edwardkim.weatherforecast.data.LocationRepository
+import com.edwardkim.weatherforecast.data.WeatherForecastItem
 import com.edwardkim.weatherforecast.data.WeatherRepository
-import com.edwardkim.weatherforecast.ui.WeatherForecastItem
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -16,7 +16,7 @@ import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
-class WeatherDashboardViewModel @Inject constructor(
+class DashboardViewModel @Inject constructor(
     private val weatherRepository: WeatherRepository,
     private val locationRepository: LocationRepository
 ): ViewModel() {
@@ -65,10 +65,15 @@ class WeatherDashboardViewModel @Inject constructor(
                 weatherRepository.get5Day3HourForecast(location.latitude, location.longitude, "imperial")
                     .body()
             }
+            val currentLocation = async(Dispatchers.IO) {
+                weatherRepository.getLocations(location.latitude, location.longitude)
+                    .body()
+            }
 
             val currentWeatherResponse = currentWeather.await()
             val forecastWeatherResponse = forecastWeather.await()
-            if (currentWeatherResponse == null || forecastWeatherResponse == null) {
+            val currentLocationResponse = currentLocation.await()
+            if (currentWeatherResponse == null || forecastWeatherResponse == null || currentLocationResponse == null) {
                 _uiState.update {
                     WeatherDashboardUiState.Error
                 }
@@ -76,9 +81,10 @@ class WeatherDashboardViewModel @Inject constructor(
             } else {
                 _uiState.update {
                     WeatherDashboardUiState.Success(
-                        currentTemperature = currentWeatherResponse.temperatureInfo.temperature,
-                        currentWeatherDescription = currentWeatherResponse.weatherInfoItems[0].weatherDescription,
-                        currentFeelsLikeTemperature = currentWeatherResponse.temperatureInfo.feelsLikeTemperature,
+                        locationName = currentLocationResponse[0].name,
+                        temperature = currentWeatherResponse.temperatureInfo.temperature,
+                        weatherDescription = currentWeatherResponse.weatherInfoItems[0].weatherDescription,
+                        feelsLikeTemperature = currentWeatherResponse.temperatureInfo.feelsLikeTemperature,
                         weatherForecastItems = forecastWeatherResponse.forecastInfoItems.map {
                             WeatherForecastItem(
                                 time = it.timestamp,
@@ -98,9 +104,10 @@ sealed interface WeatherDashboardUiState {
     data object LocationPermissionDeniedPermanently: WeatherDashboardUiState
     data object Error: WeatherDashboardUiState
     data class Success(
-        val currentTemperature: Double,
-        val currentWeatherDescription: String,
-        val currentFeelsLikeTemperature: Double,
+        val locationName: String,
+        val temperature: Double,
+        val weatherDescription: String,
+        val feelsLikeTemperature: Double,
         val weatherForecastItems: List<WeatherForecastItem>
     ): WeatherDashboardUiState
 }
